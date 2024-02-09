@@ -1,7 +1,7 @@
 import random
 import os
 import pygame
-from pygame.constants import QUIT, K_DOWN, K_UP, K_LEFT, K_RIGHT
+from pygame.constants import QUIT, K_DOWN, K_UP, K_LEFT, K_RIGHT, K_SPACE
 
 pygame.init()
 
@@ -61,18 +61,18 @@ def create_bonus():
 CREATE_ROCKET = pygame.USEREVENT + 4
 pygame.time.set_timer(CREATE_ROCKET, 500)
 rockets = []
-def create_bonus():
-    bonus_size = (50, 90)
-    bonus = pygame.transform.scale(pygame.image.load('pic/bonus.png'), bonus_size)
-    bonus_rect = pygame.Rect(random.randint(DELTA, WIDTH - DELTA), 0, *bonus_size)
-    bonus_move = [0, random.randint(1, 1)]
-    return [bonus, bonus_rect, bonus_move]
+def create_rocket():
+    rocket_size = (30, 15)
+    rocket = pygame.transform.scale(pygame.image.load('pic/rocket.png'), rocket_size)
+    rocket_rect = pygame.Rect(player_rect.centerx, player_rect.centery, *rocket_size)
+    rocket_move = [random.randint(1, 1), 0]
+    return [rocket, rocket_rect, rocket_move]
 
 playing = True
 score = 0
 image_index = 0
 lives_count = 3
-COUNT_TIMER = pygame.USEREVENT + 3
+COUNT_TIMER = pygame.USEREVENT + 5
 pygame.time.set_timer(COUNT_TIMER, 100)
 timer = 0
 
@@ -80,6 +80,7 @@ while lives_count > 0 and playing:
     FPS.tick(200)
 
     for event in pygame.event.get():
+         
         if event.type == COUNT_TIMER:
             timer += 1
         if event.type == QUIT:
@@ -107,6 +108,9 @@ while lives_count > 0 and playing:
     main_display.blit(bg, (bg_x2, 0))
 
     keys = pygame.key.get_pressed()
+
+    if keys[K_SPACE]:
+        rockets.append(create_rocket())
 
     if keys[K_DOWN] and player_rect.bottom < HEIGHT:
         player_rect = player_rect.move(player_move_down)
@@ -138,6 +142,15 @@ while lives_count > 0 and playing:
         if player_rect.colliderect(bonus[1]):
             score += 1
             bonuses.pop(bonuses.index(bonus))
+
+    for rocket in rockets:
+        rocket[1] = rocket[1].move(rocket[2])
+        main_display.blit(rocket[0], rocket[1])
+
+        for enemy in enemies:
+            if enemy[1].colliderect(rocket[1]):
+                enemies.pop(enemies.index(enemy))
+                rockets.pop(rockets.index(rocket))
             
     main_display.blit(FONT.render(str(score), True, COLOR_BLACK), (WIDTH - 50, 20))
     main_display.blit(FONT.render(str(lives_count), True, COLOR_RED), (WIDTH - 70, 20))
@@ -153,3 +166,7 @@ while lives_count > 0 and playing:
     for bonus in bonuses:
         if bonus[1].top > HEIGHT:
             bonuses.pop(bonuses.index(bonus))
+
+    for rocket in rockets:
+        if rocket[1].right > WIDTH:
+            rockets.pop(rockets.index(rocket)) 
